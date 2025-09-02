@@ -67,10 +67,10 @@ The demo includes rich sample data to showcase all features:
 - **Bundesbank** - German inflation data with hawkish analysis
 
 ### Sample Emails (3)
-- **Bloomberg Markets** - "Five Things" newsletter with rich HTML formatting
-- **WSJ Pro** - Fed Minutes analysis with professional layout
-- **Goldman Sachs Research** - Macro outlook with tables and charts
-
+- **Bloomberg Markets** Example - "Five Things" newsletter with rich HTML formatting
+- **WSJ Pro**  Example - Fed Minutes analysis with professional layout
+- **Bank  Research** - Macro outlook with tables and charts
+*****this is only for user with permission to access information from the sources*****
 ## 🎨 Interface Preview
 
 ```
