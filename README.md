@@ -1,4 +1,4 @@
-# 🌊 SAGE Unified Feed - Gmail-Style Intelligence Interface
+# 🌊 SAGE Unified Feed - Gmail-Style Intelligence Interface- For personal not business use
 
 A beautiful Gmail-style unified feed interface that combines Twitter and Email intelligence with rich HTML content rendering and AI sentiment analysis. Built with Flask and pure JavaScript - no external APIs required!
 
@@ -25,7 +25,7 @@ A beautiful Gmail-style unified feed interface that combines Twitter and Email i
 - **Visual indicators** - Color-coded sentiment badges
 
 ### 📰 Rich Email Content
-- **Newsletter-quality HTML** - Bloomberg, WSJ, Goldman Sachs style formatting
+- **Newsletter-quality HTML** - Bloomberg, WSJ,  Sell side style formatting
 - **Multiple attachments** - PDF reports with file sizes
 - **Extracted links** - All links parsed and displayed
 - **Content indicators** - Shows content size and type
@@ -85,7 +85,7 @@ The demo includes rich sample data to showcase all features:
 │ Only     │  🧵 FOMC maintains target range at 5.25-5.50%...   │
 │          │  [Hawkish] [High Impact]                          │
 │ Email    ├──────────────────────────────────────────────────────┤
-│ Only     │  WSJ Pro                                 4h ago   │
+│ Only     │  WSJ Pro  or any permitted journal that u got personal acess  │
 │          │  Breaking: Fed Minutes Reveal Growing...     💰    │
 │          │  Internal Fed debate intensifying...              │
 └──────────┴──────────────────────────────────────────────────────┘
