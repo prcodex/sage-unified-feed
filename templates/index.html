@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAGE Unified Feed Demo - Twitter + Email Intelligence</title>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Google Sans', Arial, sans-serif;
+            background-color: #f1f3f4;
+            color: #202124;
+        }
+        
+        /* Gmail-like Header */
+        .gmail-header {
+            background: white;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+        
+        .sage-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 20px;
+            font-weight: 500;
+            color: #0f9d58;
+        }
+        
+        .sage-logo .material-icons {
+            font-size: 28px;
+        }
+        
+        .demo-badge {
+            background: #f56565;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-left: 12px;
+        }
+        
+        .search-box {
+            flex: 1;
+            max-width: 720px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .search-box input {
+            width: 100%;
+            height: 46px;
+            background: #f1f3f4;
+            border: none;
+            border-radius: 8px;
+            padding: 0 48px;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            background: white;
+            box-shadow: 0 1px 6px rgba(32,33,36,.28);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #5f6368;
+        }
+        
+        /* Main Layout */
+        .gmail-main {
+            display: flex;
+            margin-top: 64px;
+            height: calc(100vh - 64px);
+        }
+        
+        /* Sidebar */
+        .gmail-sidebar {
+            width: 256px;
+            background: white;
+            padding: 8px 0;
+            flex-shrink: 0;
+        }
+        
+        .compose-btn {
+            margin: 8px 8px 16px 8px;
+            height: 56px;
+            width: calc(100% - 16px);
+            background: #c2e7ff;
+            border: none;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .compose-btn:hover {
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            background: #a8d7ff;
+        }
+        
+        .sidebar-item {
+            height: 32px;
+            padding: 0 26px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            cursor: pointer;
+            position: relative;
+            color: #202124;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .sidebar-item:hover {
+            background: #f1f3f4;
+        }
+        
+        .sidebar-item.active {
+            background: #fce8e6;
+            color: #d93025;
+        }
+        
+        .sidebar-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #d93025;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .sidebar-item .material-icons {
+            font-size: 20px;
+        }
+        
+        .sidebar-stats {
+            padding: 20px 26px;
+            border-top: 1px solid #e0e0e0;
+            margin-top: 20px;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: #5f6368;
+        }
+        
+        .stat-value {
+            font-weight: 600;
+            color: #202124;
+        }
+        
+        /* Content Area */
+        .gmail-content {
+            flex: 1;
+            background: white;
+            border-radius: 16px 0 0 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .content-header {
+            height: 48px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            background: #f8f9fa;
+        }
+        
+        .refresh-btn {
+            background: none;
+            border: none;
+            padding: 8px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .refresh-btn:hover {
+            background: #e8eaed;
+        }
+        
+        /* Feed Items */
+        .feed-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .feed-item {
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            height: 40px;
+            border-bottom: 1px solid #f1f3f4;
+            cursor: pointer;
+            transition: all 0.1s;
+            position: relative;
+        }
+        
+        .feed-item:hover {
+            box-shadow: inset 1px 0 0 #dadce0, inset -1px 0 0 #dadce0, 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+            z-index: 1;
+        }
+        
+        .feed-checkbox {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+        }
+        
+        .feed-star {
+            color: #dadce0;
+            margin-right: 12px;
+            cursor: pointer;
+        }
+        
+        .feed-star:hover {
+            color: #fbbc04;
+        }
+        
+        .feed-sender {
+            width: 200px;
+            font-weight: 500;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .feed-subject {
+            flex: 1;
+            display: flex;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .subject-text {
+            font-weight: 500;
+            margin-right: 8px;
+        }
+        
+        .preview-text {
+            color: #5f6368;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .feed-time {
+            font-size: 14px;
+            color: #202124;
+            font-weight: 500;
+            margin-left: auto;
+            padding-left: 16px;
+        }
+        
+        .feed-badges {
+            display: flex;
+            gap: 8px;
+            margin-left: 8px;
+        }
+        
+        .feed-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .badge-twitter {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        
+        .badge-email {
+            background: #fce4ec;
+            color: #c2185b;
+        }
+        
+        .badge-financial {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .badge-hawkish {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .badge-dovish {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        /* Detail Panel */
+        .detail-panel {
+            position: fixed;
+            top: 64px;
+            right: -600px;
+            width: 600px;
+            height: calc(100vh - 64px);
+            background: white;
+            box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+            transition: right 0.3s;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .detail-panel.open {
+            right: 0;
+        }
+        
+        .detail-header {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .detail-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #5f6368;
+        }
+        
+        .detail-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .detail-meta {
+            margin-bottom: 20px;
+        }
+        
+        .detail-meta-item {
+            display: flex;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .detail-meta-label {
+            font-weight: 500;
+            width: 80px;
+            color: #5f6368;
+        }
+        
+        .detail-meta-value {
+            flex: 1;
+            color: #202124;
+        }
+        
+        .detail-body {
+            font-size: 14px;
+            line-height: 20px;
+            color: #202124;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #5f6368;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border: 3px solid #f1f3f4;
+            border-top-color: #1a73e8;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Gmail-like Header -->
+    <div class="gmail-header">
+        <div class="sage-logo">
+            <span class="material-icons">water_drop</span>
+            <span>SAGE Unified Feed</span>
+            <span class="demo-badge">Demo</span>
+        </div>
+        <div class="search-box">
+            <span class="material-icons search-icon">search</span>
+            <input type="text" placeholder="Search mail" id="search-input">
+        </div>
+    </div>
+    
+    <!-- Main Layout -->
+    <div class="gmail-main">
+        <!-- Sidebar -->
+        <div class="gmail-sidebar">
+            <button class="compose-btn">
+                <span class="material-icons">edit</span>
+                <span>Compose</span>
+            </button>
+            
+            <div class="sidebar-item active" onclick="loadFeed('all', this)">
+                <span class="material-icons">inbox</span>
+                <span>Unified Feed</span>
+            </div>
+            
+            <div class="sidebar-item" onclick="loadFeed('email', this)">
+                <span class="material-icons">mail</span>
+                <span>Emails Only</span>
+            </div>
+            
+            <div class="sidebar-item" onclick="loadFeed('twitter', this)">
+                <span class="material-icons">tag</span>
+                <span>Twitter Only</span>
+            </div>
+            
+            <div class="sidebar-stats">
+                <div class="stat-item">
+                    <span>Total Items</span>
+                    <span class="stat-value" id="total-count">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>Tweets</span>
+                    <span class="stat-value" id="tweet-count">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>Emails</span>
+                    <span class="stat-value" id="email-count">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>Last Update</span>
+                    <span class="stat-value" id="last-update">Just now</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Content Area -->
+        <div class="gmail-content">
+            <div class="content-header">
+                <button class="refresh-btn" onclick="refreshFeed()">
+                    <span class="material-icons">refresh</span>
+                </button>
+                <span style="margin-left: 16px; font-size: 14px; color: #5f6368;">
+                    Showing <span id="showing-count">0</span> conversations
+                </span>
+            </div>
+            
+            <div class="feed-list" id="feed-list">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 16px;">Loading your feed...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Detail Panel -->
+    <div class="detail-panel" id="detail-panel">
+        <div class="detail-header">
+            <h3 id="detail-title">Detail View</h3>
+            <button class="detail-close" onclick="closeDetail()">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <div class="detail-content" id="detail-content">
+            <!-- Content will be loaded here -->
+        </div>
+    </div>
+    
+    <script>
+        let currentFeed = [];
+        let currentFilter = 'all';
+        
+        // Load feed on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFeed('all');
+            // Auto-refresh every 30 seconds
+            setInterval(() => loadFeed(currentFilter), 30000);
+        });
+        
+        // Search functionality
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            filterFeed(searchTerm);
+        });
+        
+        async function loadFeed(type, element) {
+            currentFilter = type;
+            
+            // Update active sidebar item
+            if (element) {
+                document.querySelectorAll('.sidebar-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                element.classList.add('active');
+            }
+            
+            // Show loading
+            document.getElementById('feed-list').innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 16px;">Loading your feed...</p>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch(`/api/feed?type=${type}`);
+                const data = await response.json();
+                currentFeed = data.items;
+                displayFeed(data.items);
+                updateStats(data.items);
+            } catch (error) {
+                console.error('Error loading feed:', error);
+                document.getElementById('feed-list').innerHTML = 
+                    '<div class="loading">Error loading feed. Please try again.</div>';
+            }
+        }
+        
+        function displayFeed(items) {
+            const feedList = document.getElementById('feed-list');
+            
+            if (items.length === 0) {
+                feedList.innerHTML = '<div class="loading">No items found</div>';
+                document.getElementById('showing-count').textContent = '0';
+                return;
+            }
+            
+            let html = '';
+            items.forEach(item => {
+                html += createFeedItem(item);
+            });
+            
+            feedList.innerHTML = html;
+            document.getElementById('showing-count').textContent = items.length;
+        }
+        
+        function createFeedItem(item) {
+            const badges = [];
+            
+            if (item.type === 'tweet') {
+                badges.push('<span class="feed-badge badge-twitter">Twitter</span>');
+                if (item.sentiment === 'hawkish') {
+                    badges.push('<span class="feed-badge badge-hawkish">Hawkish</span>');
+                } else if (item.sentiment === 'dovish') {
+                    badges.push('<span class="feed-badge badge-dovish">Dovish</span>');
+                }
+            } else {
+                badges.push('<span class="feed-badge badge-email">Email</span>');
+                if (item.category === 'newsletter' || item.category === 'financial' || item.category === 'research') {
+                    badges.push('<span class="feed-badge badge-financial">Financial</span>');
+                }
+            }
+            
+            const sender = item.type === 'tweet' ? `@${item.author}` : item.sender;
+            const subject = item.type === 'tweet' ? 'Tweet' : item.subject;
+            const preview = item.type === 'tweet' ? item.content : item.preview;
+            
+            return `
+                <div class="feed-item" onclick="showDetail('${item.id}')">
+                    <input type="checkbox" class="feed-checkbox" onclick="event.stopPropagation()">
+                    <span class="material-icons feed-star">star_border</span>
+                    <div class="feed-sender">${sender}</div>
+                    <div class="feed-subject">
+                        <span class="subject-text">${subject}</span>
+                        <span class="preview-text">- ${preview}</span>
+                    </div>
+                    <div class="feed-badges">
+                        ${badges.join('')}
+                    </div>
+                    <div class="feed-time">${item.time_ago}</div>
+                </div>
+            `;
+        }
+        
+        function updateStats(items) {
+            const tweets = items.filter(i => i.type === 'tweet').length;
+            const emails = items.filter(i => i.type === 'email').length;
+            
+            document.getElementById('total-count').textContent = items.length;
+            document.getElementById('tweet-count').textContent = tweets;
+            document.getElementById('email-count').textContent = emails;
+            document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+        }
+        
+        function filterFeed(searchTerm) {
+            if (!searchTerm) {
+                displayFeed(currentFeed);
+                return;
+            }
+            
+            const filtered = currentFeed.filter(item => {
+                const searchableText = (
+                    (item.sender || item.author || '') + ' ' +
+                    (item.subject || '') + ' ' +
+                    (item.content || item.preview || '')
+                ).toLowerCase();
+                return searchableText.includes(searchTerm);
+            });
+            
+            displayFeed(filtered);
+        }
+        
+        async function showDetail(itemId) {
+            const item = currentFeed.find(i => i.id === itemId);
+            if (!item) return;
+            
+            const panel = document.getElementById('detail-panel');
+            const detailContent = document.getElementById('detail-content');
+            
+            // Show loading
+            detailContent.innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                </div>
+            `;
+            
+            // Open panel
+            panel.classList.add('open');
+            
+            // Fetch detailed content
+            const endpoint = item.type === 'tweet' 
+                ? `/api/tweet/${itemId}`
+                : `/api/email/${itemId}`;
+            
+            try {
+                const response = await fetch(endpoint);
+                const data = await response.json();
+                
+                if (item.type === 'tweet') {
+                    document.getElementById('detail-title').textContent = 'Tweet Details';
+                    
+                    // Build AI analysis section if available
+                    let aiAnalysisHtml = '';
+                    if (data.ai_analysis) {
+                        const ai = data.ai_analysis;
+                        aiAnalysisHtml = `
+                        <div style="margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
+                            <h4 style="margin: 0 0 15px 0; color: #007bff;">🤖 AI Analysis</h4>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                <div>
+                                    <strong>Monetary Policy:</strong><br>
+                                    <span style="font-size: 24px; font-weight: bold; color: ${ai.monetary_policy.value < 0 ? '#dc3545' : '#28a745'};">
+                                        ${ai.monetary_policy.label}
+                                    </span>
+                                    <div style="background: #e9ecef; height: 8px; border-radius: 4px; margin-top: 5px;">
+                                        <div style="background: ${ai.monetary_policy.value < 0 ? '#dc3545' : '#28a745'}; width: ${ai.monetary_policy.percentage}%; height: 100%; border-radius: 4px;"></div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <strong>Market Sentiment:</strong><br>
+                                    <span style="font-size: 24px; font-weight: bold; color: ${ai.market_sentiment.value < 0 ? '#dc3545' : '#28a745'};">
+                                        ${ai.market_sentiment.label}
+                                    </span>
+                                    <div style="background: #e9ecef; height: 8px; border-radius: 4px; margin-top: 5px;">
+                                        <div style="background: ${ai.market_sentiment.value < 0 ? '#dc3545' : '#28a745'}; width: ${ai.market_sentiment.percentage}%; height: 100%; border-radius: 4px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                <div>
+                                    <strong>Market Impact:</strong><br>
+                                    <span style="font-size: 18px; color: ${ai.market_impact.percentage > 70 ? '#dc3545' : ai.market_impact.percentage > 30 ? '#ffc107' : '#6c757d'};">
+                                        ${ai.market_impact.label} (${ai.market_impact.percentage}%)
+                                    </span>
+                                </div>
+                                
+                                <div>
+                                    <strong>Confidence:</strong><br>
+                                    <span style="font-size: 18px; color: ${ai.confidence.percentage > 80 ? '#28a745' : ai.confidence.percentage > 60 ? '#ffc107' : '#dc3545'};">
+                                        ${ai.confidence.percentage}%
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #dee2e6;">
+                                <strong>AI Reasoning:</strong><br>
+                                <p style="margin: 10px 0 0 0; color: #495057; line-height: 1.6;">
+                                    ${ai.reasoning}
+                                </p>
+                            </div>
+                        </div>
+                        `;
+                    }
+                    
+                    detailContent.innerHTML = `
+                        <div class="detail-meta">
+                            <div class="detail-meta-item">
+                                <span class="detail-meta-label">From:</span>
+                                <span class="detail-meta-value">@${data.author} (${data.author_name})</span>
+                            </div>
+                            <div class="detail-meta-item">
+                                <span class="detail-meta-label">Date:</span>
+                                <span class="detail-meta-value">${data.formatted_time}</span>
+                            </div>
+                            <div class="detail-meta-item">
+                                <span class="detail-meta-label">Engagement:</span>
+                                <span class="detail-meta-value">❤️ ${data.likes} likes • 🔄 ${data.retweets} retweets • 💬 ${data.replies || 0} replies</span>
+                            </div>
+                            <div class="detail-meta-item">
+                                <span class="detail-meta-label">Quick Sentiment:</span>
+                                <span class="detail-meta-value">
+                                    <span style="background: ${data.sentiment === 'hawkish' ? '#dc3545' : data.sentiment === 'dovish' ? '#28a745' : '#6c757d'}; color: white; padding: 2px 8px; border-radius: 4px;">
+                                        ${data.sentiment}
+                                    </span>
+                                    <span style="background: ${data.impact === 'high' ? '#dc3545' : data.impact === 'medium' ? '#ffc107' : '#6c757d'}; color: white; padding: 2px 8px; border-radius: 4px; margin-left: 8px;">
+                                        ${data.impact} impact
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="detail-body" style="font-size: 18px; line-height: 1.6; padding: 20px 0;">
+                            ${data.content.replace(/\n/g, '<br>')}
+                        </div>
+                        ${aiAnalysisHtml}
+                    `;
+                } else {
+                    document.getElementById('detail-title').textContent = data.subject;
+                    
+                    // Check if we have rich HTML content
+                    const emailContent = data.rendered_content || data.content;
+                    const isHTML = data.content_type === 'html' && data.rendered_content;
+                    
+                    // Build attachment details if present
+                    let attachmentHtml = '';
+                    if (data.attachments && data.attachments.length > 0) {
+                        attachmentHtml = '<div class="detail-meta-item"><span class="detail-meta-label">Attachments:</span><span class="detail-meta-value">';
+                        data.attachments.forEach(att => {
+                            const sizeKB = Math.round(att.size / 1024);
+                            attachmentHtml += `📎 ${att.filename} (${sizeKB} KB)<br>`;
+                        });
+                        attachmentHtml += '</span></div>';
+                    }
+                    
+                    // Build links section if present
+                    let linksHtml = '';
+                    if (data.extracted_links && data.extracted_links.length > 0) {
+                        linksHtml = '<div class="detail-meta-item"><span class="detail-meta-label">Links:</span><span class="detail-meta-value">' + data.link_count + ' links found</span></div>';
+                    }
+                    
+                    detailContent.innerHTML = `
+                        <div class="detail-meta">
+                            <div class="detail-meta-item">
+                                <span class="detail-meta-label">From:</span>
+                                <span class="detail-meta-value">${data.sender} &lt;${data.sender_email}&gt;</span>
+                            </div>
+                            <div class="detail-meta-item">
+                                <span class="detail-meta-label">Date:</span>
+                                <span class="detail-meta-value">${data.formatted_time}</span>
+                            </div>
+                            <div class="detail-meta-item">
+                                <span class="detail-meta-label">Category:</span>
+                                <span class="detail-meta-value">${data.category}</span>
+                            </div>
+                            ${attachmentHtml}
+                            ${linksHtml}
+                            ${isHTML ? `
+                            <div class="detail-meta-item">
+                                <span class="detail-meta-label">Content:</span>
+                                <span class="detail-meta-value" style="color: #28a745;">📄 Rich HTML (${Math.round(data.content_length / 1024)} KB)</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                        <div class="detail-body" ${isHTML ? 'style="background: #fff; padding: 20px; border-radius: 8px; overflow-x: auto;"' : ''}>
+                            ${isHTML ? emailContent : emailContent.replace(/\n/g, '<br>')}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading detail:', error);
+                detailContent.innerHTML = '<div class="loading">Error loading details</div>';
+            }
+        }
+        
+        function closeDetail() {
+            document.getElementById('detail-panel').classList.remove('open');
+        }
+        
+        function refreshFeed() {
+            loadFeed(currentFilter);
+        }
+    </script>
+</body>
+</html>

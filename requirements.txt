@@ -1,0 +1,4 @@
+# SAGE Unified Feed Requirements
+# Minimal dependencies - just Flask!
+
+Flask==2.3.3
